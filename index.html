@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sert1c">
+<meta name="theme-color" content="#0a0f1e">
+<title>Sert1c</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>
+// SheetJS se carga solo cuando se necesita importar Excel
+function loadXLSX(callback) {
+  if (window.XLSX) { callback(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload = callback;
+  s.onerror = function() { showToast('❌ Necesitas internet para importar Excel por primera vez'); };
+  document.head.appendChild(s);
+}
+</script>
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --bg2: #111827;
+    --bg3: #1a2235;
+    --card: #151d2e;
+    --border: #1e2d45;
+    --accent1: #00d4ff;
+    --accent2: #7c3aed;
+    --accent1-dim: rgba(0,212,255,0.12);
+    --accent2-dim: rgba(124,58,237,0.12);
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #475569;
+    --success: #10b981;
+    --danger: #ef4444;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --radius: 14px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  /* ── APP SHELL ── */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    flex-shrink: 0;
+    padding: 52px 20px 16px;
+    background: linear-gradient(180deg, #0a0f1e 0%, rgba(10,15,30,0.95) 100%);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .logo {
+    font-family: var(--mono);
+    font-size: 26px;
+    letter-spacing: 4px;
+    color: var(--accent1);
+    text-shadow: 0 0 20px rgba(0,212,255,0.4);
+  }
+  .logo span { color: var(--text2); font-size: 11px; display: block; letter-spacing: 2px; margin-top: 2px; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 8px;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text3);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tab.active-correos {
+    background: var(--accent1-dim);
+    border-color: var(--accent1);
+    color: var(--accent1);
+  }
+  .tab.active-windows {
+    background: var(--accent2-dim);
+    border-color: var(--accent2);
+    color: #a78bfa;
+  }
+  .tab.active-config {
+    background: rgba(16,185,129,0.1);
+    border-color: var(--success);
+    color: var(--success);
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel.active { display: flex; }
+
+  /* ── SEARCH BAR ── */
+  .search-wrap {
+    flex-shrink: 0;
+    padding: 16px 20px 12px;
+  }
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus-within.correos-focus { border-color: var(--accent1); box-shadow: 0 0 0 3px rgba(0,212,255,0.08); }
+  .search-box:focus-within.windows-focus { border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(124,58,237,0.08); }
+  .search-icon { font-size: 16px; opacity: 0.4; flex-shrink: 0; }
+  .search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+  }
+  .search-input::placeholder { color: var(--text3); }
+  .clear-btn {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 2px;
+  }
+  .result-count {
+    padding: 0 20px 8px;
+    font-size: 12px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+
+  /* ── RESULTS LIST ── */
+  .results {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px;
+    padding-bottom: calc(16px + var(--safe-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    color: var(--text3);
+    text-align: center;
+    padding: 40px;
+  }
+  .empty-icon { font-size: 48px; opacity: 0.3; }
+  .empty-title { font-size: 16px; font-weight: 500; color: var(--text2); }
+  .empty-sub { font-size: 13px; line-height: 1.5; }
+
+  /* ── RECORD CARD ── */
+  .record-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    animation: fadeIn 0.2s ease;
+  }
+  .record-card:active { transform: scale(0.98); opacity: 0.85; }
+  .record-card.correo-card:hover, .record-card.correo-card:active { border-color: var(--accent1); }
+  .record-card.windows-card:hover, .record-card.windows-card:active { border-color: var(--accent2); }
+
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: translateY(0); } }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .card-title {
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-correo { background: var(--accent1); box-shadow: 0 0 6px var(--accent1); }
+  .dot-windows { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+
+  .card-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--bg3);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .card-sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 3px;
+  }
+  .card-dep { font-size: 11px; color: var(--text3); }
+  .card-arrow { color: var(--text3); font-size: 14px; }
+
+  /* ── MODAL / DETAIL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    animation: fadeOverlay 0.2s ease;
+  }
+  .modal-overlay.open { display: flex; align-items: flex-end; }
+  @keyframes fadeOverlay { from { opacity:0; } to { opacity:1; } }
+
+  .modal {
+    width: 100%;
+    max-height: 90dvh;
+    background: var(--bg2);
+    border-radius: 24px 24px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.32,0.72,0,1);
+    padding-bottom: calc(32px + var(--safe-bottom));
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 0;
+  }
+  .modal-title { font-size: 18px; font-weight: 700; }
+  .modal-close {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .modal-avatar {
+    width: 64px; height: 64px;
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    margin: 20px auto 8px;
+  }
+  .avatar-correo { background: var(--accent1-dim); color: var(--accent1); border: 1px solid rgba(0,212,255,0.3); }
+  .avatar-windows { background: var(--accent2-dim); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+
+  .modal-name { text-align: center; font-size: 17px; font-weight: 600; margin-bottom: 20px; }
+
+  .fields { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+  .field {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .field-icon { font-size: 16px; flex-shrink: 0; opacity: 0.6; }
+  .field-body { flex: 1; min-width: 0; }
+  .field-label { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+  .field-value { font-size: 14px; color: var(--text); word-break: break-all; }
+  .field-value.mono { font-family: var(--mono); font-size: 13px; }
+  .field-value.hidden { letter-spacing: 3px; font-size: 12px; }
+  .field-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .field-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .field-btn:active { transform: scale(0.9); }
+  .field-btn.copied { border-color: var(--success); color: var(--success); }
+
+  /* ── CONFIG PANEL ── */
+  .config-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    padding-bottom: calc(16px + var(--safe-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .config-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .config-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .config-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .config-icon.ci-correo { background: var(--accent1-dim); border: 1px solid rgba(0,212,255,0.2); }
+  .config-icon.ci-windows { background: var(--accent2-dim); border: 1px solid rgba(124,58,237,0.2); }
+
+  .config-section-title { font-size: 15px; font-weight: 600; }
+  .config-count {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+  .config-status {
+    margin-left: auto;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .status-ok { background: var(--success); box-shadow: 0 0 6px var(--success); }
+  .status-empty { background: var(--text3); }
+
+  .config-fields-hint {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+
+  .config-btns { display: flex; gap: 10px; }
+  .btn-import {
+    flex: 1;
+    padding: 11px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: opacity 0.15s;
+  }
+  .btn-import:active { opacity: 0.7; }
+  .btn-import.bi-correo { background: var(--accent1); color: #000; }
+  .btn-import.bi-windows { background: var(--accent2); color: #fff; }
+
+  .btn-clear {
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 14px;
+    transition: opacity 0.15s;
+  }
+  .btn-clear:active { opacity: 0.7; }
+
+  .config-info {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .config-info-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .config-info pre {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent1);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    overflow-x: auto;
+    margin: 6px 0 10px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .config-info pre.pre-windows { color: #a78bfa; }
+  .config-info-note { font-size: 11px; color: var(--text3); line-height: 1.5; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: calc(90px + var(--safe-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 10px 20px;
+    font-size: 13px;
+    color: var(--text);
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── HIDDEN FILE INPUT ── */
+  input[type=file] { display: none; }
+
+  /* ── CONFIRM DIALOG ── */
+  .confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .confirm-overlay.open { display: flex; }
+  .confirm-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px 20px;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+  }
+  .confirm-icon { font-size: 36px; margin-bottom: 12px; }
+  .confirm-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .confirm-text { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
+  .confirm-btns { display: flex; gap: 10px; }
+  .confirm-cancel {
+    flex: 1; padding: 12px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text);
+    font-family: var(--sans); font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  .confirm-ok {
+    flex: 1; padding: 12px;
+    background: var(--danger); border: none;
+    border-radius: 12px; color: #fff;
+    font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">SERT1C<span>GESTIÓN DE CREDENCIALES</span></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active-correos" onclick="switchTab('correos')">✉️ Correos</button>
+      <button class="tab" onclick="switchTab('windows')">🖥️ Windows</button>
+      <button class="tab" onclick="switchTab('config')">⚙️ Config</button>
+    </div>
+  </div>
+
+  <!-- PANEL CORREOS -->
+  <div class="panel active" id="panel-correos">
+    <div class="search-wrap">
+      <div class="search-box correos-focus">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="search-correos" type="search" placeholder="Buscar login, email, unidad..." oninput="renderCorreos()" autocomplete="off" autocorrect="off" autocapitalize="off">
+        <button class="clear-btn" onclick="clearSearch('correos')" id="clear-correos" style="display:none">✕</button>
+      </div>
+    </div>
+    <div class="result-count" id="count-correos"></div>
+    <div class="results" id="results-correos"></div>
+  </div>
+
+  <!-- PANEL WINDOWS -->
+  <div class="panel" id="panel-windows">
+    <div class="search-wrap">
+      <div class="search-box windows-focus">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="search-windows" type="search" placeholder="Buscar dominio, usuario, unidad..." oninput="renderWindows()" autocomplete="off" autocorrect="off" autocapitalize="off">
+        <button class="clear-btn" onclick="clearSearch('windows')" id="clear-windows" style="display:none">✕</button>
+      </div>
+    </div>
+    <div class="result-count" id="count-windows"></div>
+    <div class="results" id="results-windows"></div>
+  </div>
+
+  <!-- PANEL CONFIG -->
+  <div class="panel" id="panel-config">
+    <div class="config-content">
+
+      <!-- Sección Correos -->
+      <div class="config-section">
+        <div class="config-section-header">
+          <div class="config-icon ci-correo">✉️</div>
+          <div>
+            <div class="config-section-title">Tabla Correos</div>
+            <div class="config-count" id="cfg-count-correos">0 registros</div>
+          </div>
+          <div class="config-status" id="cfg-status-correos"></div>
+        </div>
+        <div class="config-fields-hint">login · password · email · unidad · dependencia</div>
+        <div class="config-btns">
+          <button class="btn-import bi-correo" onclick="document.getElementById('file-correos').click()">⬆ Importar CSV</button>
+          <button class="btn-clear" onclick="confirmClear('correos')" title="Borrar datos">🗑</button>
+        </div>
+        <input type="file" id="file-correos" accept=".csv,.xlsx,.xls" onchange="importFile(event,'correos')">
+      </div>
+
+      <!-- Sección Windows -->
+      <div class="config-section">
+        <div class="config-section-header">
+          <div class="config-icon ci-windows">🖥️</div>
+          <div>
+            <div class="config-section-title">Tabla Windows</div>
+            <div class="config-count" id="cfg-count-windows">0 registros</div>
+          </div>
+          <div class="config-status" id="cfg-status-windows"></div>
+        </div>
+        <div class="config-fields-hint">nombreDominio · usuario · password · unidad</div>
+        <div class="config-btns">
+          <button class="btn-import bi-windows" onclick="document.getElementById('file-windows').click()">⬆ Importar CSV</button>
+          <button class="btn-clear" onclick="confirmClear('windows')" title="Borrar datos">🗑</button>
+        </div>
+        <input type="file" id="file-windows" accept=".csv,.xlsx,.xls" onchange="importFile(event,'windows')">
+      </div>
+
+      <!-- Formato -->
+      <div class="config-info">
+        <div class="config-info-title">📋 Formato requerido (CSV o Excel)</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Correos (1ª fila = cabecera):</div>
+        <pre>login,password,email,unidad,dependencia
+juan,pass123,juan@corp.es,TI,Sistemas
+maria,abc456,maria@corp.es,RRHH,Personal</pre>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Windows (1ª fila = cabecera):</div>
+        <pre class="pre-windows">nombreDominio,usuario,password,unidad
+CORP\PC01,jgarcia,win123,TI
+CORP\PC02,mlopez,win456,RRHH</pre>
+        <div class="config-info-note">✅ Soporta archivos <strong style="color:var(--success)">.xlsx</strong>, <strong style="color:var(--success)">.xls</strong> y <strong style="color:var(--success)">.csv</strong><br>En Excel la primera fila debe ser la cabecera con los nombres de columna exactos.<br>El orden de las columnas debe respetarse.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Detalle</div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div id="modal-avatar-wrap"></div>
+    <div class="modal-name" id="modal-name"></div>
+    <div class="fields" id="modal-fields"></div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title">¿Borrar datos?</div>
+    <div class="confirm-text" id="confirm-text">Se eliminarán todos los registros de esta tabla.</div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="closeConfirm()">Cancelar</button>
+      <button class="confirm-ok" id="confirm-ok-btn">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let correos = [];
+let windows = [];
+let revealedFields = {};
+let confirmTarget = null;
+
+// ── STORAGE ──
+function saveData() {
+  try {
+    localStorage.setItem('sert1c_correos', JSON.stringify(correos));
+    localStorage.setItem('sert1c_windows', JSON.stringify(windows));
+  } catch(e) {}
+}
+
+function loadData() {
+  try {
+    const c = localStorage.getItem('sert1c_correos');
+    const w = localStorage.getItem('sert1c_windows');
+    if (c) correos = JSON.parse(c);
+    if (w) windows = JSON.parse(w);
+  } catch(e) {}
+}
+
+// ── TABS ──
+let currentTab = 'correos';
+function switchTab(tab) {
+  currentTab = tab;
+  ['correos','windows','config'].forEach(t => {
+    document.getElementById('panel-'+t).classList.remove('active');
+    document.querySelectorAll('.tab')[['correos','windows','config'].indexOf(t)].className = 'tab';
+  });
+  document.getElementById('panel-'+tab).classList.add('active');
+  const tabEl = document.querySelectorAll('.tab')[['correos','windows','config'].indexOf(tab)];
+  tabEl.classList.add('active-'+tab);
+  updateConfigCounts();
+}
+
+// ── CSV PARSER ──
+function parseCSVLine(line) {
+  const fields = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === ',' && !inQ) {
+      fields.push(cur.trim()); cur = '';
+    } else {
+      cur += c;
+    }
+  }
+  fields.push(cur.trim());
+  return fields;
+}
+
+// ── IMPORT (CSV + XLSX) ──
+function importFile(event, type) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const isXlsx = /\.(xlsx|xls)$/i.test(file.name);
+
+  if (isXlsx) {
+    importXLSX(file, type);
+  } else {
+    importCSV(file, type);
+  }
+  event.target.value = '';
+}
+
+function importXLSX(file, type) {
+  if (!window.XLSX) {
+    loadXLSX(function() { importXLSX(file, type); });
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      // Usar la primera hoja
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      // Convertir a array de arrays
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+      if (rows.length < 2) { showToast('⚠️ El archivo está vacío o sin datos'); return; }
+      rows.shift(); // Eliminar cabecera
+
+      let ok = 0, err = 0;
+      const newRecords = [];
+
+      for (const row of rows) {
+        // Ignorar filas completamente vacías
+        if (row.every(c => String(c).trim() === '')) continue;
+        const f = row.map(c => String(c === null || c === undefined ? '' : c).trim());
+
+        if (type === 'correos' && f.length >= 5) {
+          newRecords.push({ login: f[0], password: f[1], email: f[2], unidad: f[3], dependencia: f[4] });
+          ok++;
+        } else if (type === 'windows' && f.length >= 4) {
+          newRecords.push({ nombreDominio: f[0], usuario: f[1], password: f[2], unidad: f[3] });
+          ok++;
+        } else {
+          err++;
+        }
+      }
+
+      if (type === 'correos') correos = newRecords;
+      else windows = newRecords;
+
+      saveData();
+      updateConfigCounts();
+      renderCorreos();
+      renderWindows();
+
+      let msg = `✅ ${ok} registros importados desde Excel`;
+      if (err > 0) msg += ` · ⚠️ ${err} filas con error`;
+      showToast(msg);
+    } catch(ex) {
+      showToast('❌ Error al leer el Excel: ' + ex.message);
+    }
+  };
+  reader.onerror = () => showToast('❌ Error al leer el archivo');
+  reader.readAsArrayBuffer(file);
+}
+
+function importCSV(file, type) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let text = e.target.result;
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+    if (lines.length < 2) { showToast('⚠️ El archivo está vacío o sin datos'); return; }
+    lines.shift();
+
+    let ok = 0, err = 0;
+    const newRecords = [];
+
+    for (const line of lines) {
+      const f = parseCSVLine(line);
+      if (type === 'correos' && f.length >= 5) {
+        newRecords.push({ login: f[0], password: f[1], email: f[2], unidad: f[3], dependencia: f[4] });
+        ok++;
+      } else if (type === 'windows' && f.length >= 4) {
+        newRecords.push({ nombreDominio: f[0], usuario: f[1], password: f[2], unidad: f[3] });
+        ok++;
+      } else {
+        err++;
+      }
+    }
+
+    if (type === 'correos') correos = newRecords;
+    else windows = newRecords;
+
+    saveData();
+    updateConfigCounts();
+    renderCorreos();
+    renderWindows();
+
+    let msg = `✅ ${ok} registros importados`;
+    if (err > 0) msg += ` · ⚠️ ${err} filas con error`;
+    showToast(msg);
+  };
+  reader.onerror = () => showToast('❌ Error al leer el archivo');
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ── SEARCH & RENDER ──
+function matchesQuery(obj, q) {
+  const lower = q.toLowerCase();
+  return Object.values(obj).some(v => String(v).toLowerCase().includes(lower));
+}
+
+function renderCorreos() {
+  const q = document.getElementById('search-correos').value;
+  const clearBtn = document.getElementById('clear-correos');
+  const countEl = document.getElementById('count-correos');
+  const listEl = document.getElementById('results-correos');
+  clearBtn.style.display = q ? 'block' : 'none';
+
+  if (correos.length === 0) {
+    countEl.textContent = '';
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">✉️</div><div class="empty-title">Sin datos de correos</div><div class="empty-sub">Ve a Configuración para importar el CSV</div></div>`;
+    return;
+  }
+  if (!q) {
+    countEl.textContent = '';
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Escribe para buscar</div><div class="empty-sub">Busca por login, email, unidad o dependencia</div></div>`;
+    return;
+  }
+
+  const filtered = correos.filter(r => matchesQuery(r, q));
+  countEl.textContent = `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`;
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-title">Sin resultados</div><div class="empty-sub">No se encontró "${escHtml(q)}"</div></div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map((r, i) => `
+    <div class="record-card correo-card" onclick="openCorreo(${correos.indexOf(r)})">
+      <div class="card-top">
+        <div class="card-title"><span class="dot dot-correo"></span>${escHtml(r.login)}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="card-badge">${escHtml(r.unidad)}</span>
+          <span class="card-arrow">›</span>
+        </div>
+      </div>
+      <div class="card-sub">${escHtml(r.email)}</div>
+      <div class="card-dep">${escHtml(r.dependencia)}</div>
+    </div>
+  `).join('');
+}
+
+function renderWindows() {
+  const q = document.getElementById('search-windows').value;
+  const clearBtn = document.getElementById('clear-windows');
+  const countEl = document.getElementById('count-windows');
+  const listEl = document.getElementById('results-windows');
+  clearBtn.style.display = q ? 'block' : 'none';
+
+  if (windows.length === 0) {
+    countEl.textContent = '';
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🖥️</div><div class="empty-title">Sin datos Windows</div><div class="empty-sub">Ve a Configuración para importar el CSV</div></div>`;
+    return;
+  }
+  if (!q) {
+    countEl.textContent = '';
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Escribe para buscar</div><div class="empty-sub">Busca por dominio, usuario o unidad</div></div>`;
+    return;
+  }
+
+  const filtered = windows.filter(r => matchesQuery(r, q));
+  countEl.textContent = `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`;
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-title">Sin resultados</div><div class="empty-sub">No se encontró "${escHtml(q)}"</div></div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map((r, i) => `
+    <div class="record-card windows-card" onclick="openWindows(${windows.indexOf(r)})">
+      <div class="card-top">
+        <div class="card-title"><span class="dot dot-windows"></span>${escHtml(r.usuario)}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="card-badge">${escHtml(r.unidad)}</span>
+          <span class="card-arrow">›</span>
+        </div>
+      </div>
+      <div class="card-sub">${escHtml(r.nombreDominio)}</div>
+    </div>
+  `).join('');
+}
+
+function clearSearch(type) {
+  document.getElementById('search-'+type).value = '';
+  if (type === 'correos') renderCorreos();
+  else renderWindows();
+}
+
+// ── MODAL ──
+function openCorreo(idx) {
+  const r = correos[idx];
+  revealedFields = {};
+  document.getElementById('modal-title').textContent = 'Detalle Correo';
+  document.getElementById('modal-avatar-wrap').innerHTML = `<div class="modal-avatar avatar-correo">${escHtml(r.login.slice(0,2).toUpperCase())}</div>`;
+  document.getElementById('modal-name').textContent = r.login;
+  document.getElementById('modal-fields').innerHTML = `
+    ${fieldRow('👤','Login', r.login, false, 'correo-login')}
+    ${fieldRow('🔒','Password', r.password, true, 'correo-pass')}
+    ${fieldRow('✉️','Email', r.email, false, 'correo-email')}
+    ${fieldRow('🏢','Unidad', r.unidad, false, 'correo-unidad')}
+    ${fieldRow('🌐','Dependencia', r.dependencia, false, 'correo-dep')}
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openWindows(idx) {
+  const r = windows[idx];
+  revealedFields = {};
+  document.getElementById('modal-title').textContent = 'Detalle Windows';
+  document.getElementById('modal-avatar-wrap').innerHTML = `<div class="modal-avatar avatar-windows">🖥️</div>`;
+  document.getElementById('modal-name').textContent = r.usuario;
+  document.getElementById('modal-fields').innerHTML = `
+    ${fieldRow('🌐','Dominio', r.nombreDominio, false, 'win-dom')}
+    ${fieldRow('👤','Usuario', r.usuario, false, 'win-user')}
+    ${fieldRow('🔒','Password', r.password, true, 'win-pass')}
+    ${fieldRow('🏢','Unidad', r.unidad, false, 'win-unidad')}
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function fieldRow(icon, label, value, isPass, key) {
+  const displayVal = isPass
+    ? `<span id="val-${key}" class="field-value mono hidden">••••••••</span>`
+    : `<span id="val-${key}" class="field-value mono">${escHtml(value)}</span>`;
+  const eyeBtn = isPass
+    ? `<button class="field-btn" onclick="toggleReveal('${key}','${escAttr(value)}')" id="eye-${key}" title="Mostrar/ocultar">👁</button>`
+    : '';
+  return `
+    <div class="field">
+      <span class="field-icon">${icon}</span>
+      <div class="field-body">
+        <div class="field-label">${label}</div>
+        ${displayVal}
+      </div>
+      <div class="field-actions">
+        ${eyeBtn}
+        <button class="field-btn" onclick="copyField('${escAttr(value)}','${key}')" id="copy-${key}" title="Copiar">📋</button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleReveal(key, value) {
+  revealedFields[key] = !revealedFields[key];
+  const el = document.getElementById('val-'+key);
+  const btn = document.getElementById('eye-'+key);
+  if (revealedFields[key]) {
+    el.textContent = value;
+    el.classList.remove('hidden');
+    btn.textContent = '🙈';
+  } else {
+    el.textContent = '••••••••';
+    el.classList.add('hidden');
+    btn.textContent = '👁';
+  }
+}
+
+function copyField(value, key) {
+  navigator.clipboard.writeText(value).then(() => {
+    const btn = document.getElementById('copy-'+key);
+    if (btn) { btn.textContent = '✅'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 1500); }
+    showToast('📋 Copiado al portapapeles');
+  }).catch(() => {
+    // Fallback for older iOS
+    const ta = document.createElement('textarea');
+    ta.value = value;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 Copiado al portapapeles');
+  });
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ── CONFIRM / CLEAR ──
+function confirmClear(type) {
+  confirmTarget = type;
+  const label = type === 'correos' ? 'Correos' : 'Windows';
+  document.getElementById('confirm-text').textContent = `Se eliminarán todos los registros de la tabla ${label}. Esta acción no se puede deshacer.`;
+  document.getElementById('confirm-ok-btn').onclick = () => doClear();
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  confirmTarget = null;
+}
+function doClear() {
+  if (confirmTarget === 'correos') { correos = []; renderCorreos(); }
+  else { windows = []; renderWindows(); }
+  saveData();
+  updateConfigCounts();
+  closeConfirm();
+  showToast('🗑 Datos eliminados');
+}
+
+// ── CONFIG COUNTS ──
+function updateConfigCounts() {
+  document.getElementById('cfg-count-correos').textContent = `${correos.length} registro${correos.length !== 1 ? 's' : ''}`;
+  document.getElementById('cfg-count-windows').textContent = `${windows.length} registro${windows.length !== 1 ? 's' : ''}`;
+  document.getElementById('cfg-status-correos').className = 'config-status ' + (correos.length > 0 ? 'status-ok' : 'status-empty');
+  document.getElementById('cfg-status-windows').className = 'config-status ' + (windows.length > 0 ? 'status-ok' : 'status-empty');
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── UTILS ──
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
+// ── INIT ──
+loadData();
+renderCorreos();
+renderWindows();
+updateConfigCounts();
+
+// Prevent pull-to-refresh on iOS
+document.addEventListener('touchmove', (e) => {
+  if (e.target.closest('.results, .config-content, .modal')) return;
+  e.preventDefault();
+}, { passive: false });
+</script>
+</body>
+</html>
